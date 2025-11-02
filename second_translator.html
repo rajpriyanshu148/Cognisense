@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Avatar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- PDF.js library from Mozilla -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fcfbf8; /* Warm, eye-comfort off-white background */
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+            border: 1px solid #f0efeb;
+        }
+        /* Header Text - Changed from gradient to solid for comfort */
+        .header-text {
+           color: #3d4c5e;
+        }
+        /* Avatar speaking animation */
+        .avatar-speaking {
+            animation: speak-pulse 1s infinite alternate;
+        }
+        @keyframes speak-pulse {
+            0% { 
+                box-shadow: 0 0 0 0px rgba(20, 184, 166, 0.5); /* Soft teal glow */
+                transform: scale(1);
+            }
+            100% { 
+                box-shadow: 0 0 0 15px rgba(20, 184, 166, 0); /* Soft teal glow */
+            }
+        }
+        /* Custom file input */
+        .file-input-label {
+            cursor: pointer;
+        }
+        /* Tab styles */
+        .tab {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-active {
+            color: #0d9488; /* Muted teal for active elements */
+            border-bottom-color: #0d9488;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-5xl mx-auto card p-6 md:p-10">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold header-text">AI Content Avatar</h1>
+            <p class="text-gray-500 mt-2">Enter text or upload a PDF, and let our avatar read it to you in any language.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            <!-- Left side: Avatar and Controls -->
+            <div class="flex flex-col items-center space-y-6">
+                <div class="relative">
+                    <img id="avatar" src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=880&q=80" alt="AI Avatar" class="w-48 h-48 rounded-full object-cover transition-all duration-300 border-4 border-white shadow-lg">
+                </div>
+                <div class="w-full space-y-4 text-center">
+                    <div>
+                        <label for="language-select" class="block text-sm font-medium text-gray-700">Select Language</label>
+                        <select id="language-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md"></select>
+                    </div>
+                     <button id="speak-btn" disabled class="w-full bg-teal-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-600 transition-transform transform hover:scale-105 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2">
+                        <i class="fas fa-volume-up"></i> Speak
+                    </button>
+                    <button id="stop-btn" class="w-full bg-rose-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-rose-600 transition-transform transform hover:scale-105 flex items-center justify-center gap-2">
+                        <i class="fas fa-stop-circle"></i> Stop
+                    </button>
+                </div>
+                <div id="status" class="w-full text-center text-gray-600 h-6"></div>
+                <div class="w-full">
+                    <label for="content-display" class="block text-sm font-medium text-gray-700 mb-1">Extracted Content:</label>
+                    <div id="content-display" class="w-full h-24 p-2 bg-gray-50 border rounded-md overflow-y-auto text-sm text-gray-700">
+                        Your content will appear here...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right side: Input -->
+            <div class="flex flex-col space-y-6">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button id="tab-text" class="tab py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 tab-active" type="button">Text Input</button>
+                        <button id="tab-pdf" class="tab py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" type="button">PDF Upload</button>
+                    </nav>
+                </div>
+
+                <!-- Text Input View -->
+                <div id="view-text">
+                    <label for="text-input" class="block text-sm font-medium text-gray-700 mb-2">Enter your content here</label>
+                    <textarea id="text-input" rows="10" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"></textarea>
+                </div>
+
+                <!-- PDF Input View (Hidden by default) -->
+                <div id="view-pdf" class="hidden">
+                    <label for="pdf-upload" class="file-input-label w-full p-6 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center hover:border-teal-500 transition">
+                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-4-4V7a4 4 0 014-4h2a4 4 0 014 4v1m-1 8l-2-2m2 2l2-2m-2 2v-4m-2 4h4m-6 4H7a2 2 0 01-2-2V7a2 2 0 012-2h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a2 2 0 01-2 2h-1m-4-2H9"></path></svg>
+                        <span class="mt-2 block text-sm font-medium text-gray-700">Click to upload a PDF</span>
+                        <span class="mt-1 block text-xs text-gray-500" id="pdf-file-name">No file chosen</span>
+                    </label>
+                    <input id="pdf-upload" type="file" class="hidden" accept=".pdf">
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button id="process-btn" class="w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 col-span-1 sm:col-span-3">
+                        Process Content
+                    </button>
+                    <button id="detect-btn" class="w-full bg-teal-100 text-teal-800 font-bold py-3 px-4 rounded-lg hover:bg-teal-200 transition flex items-center justify-center gap-2">
+                       <i class="fas fa-language"></i> Detect
+                    </button>
+                    <button id="clear-btn" class="w-full bg-gray-100 text-gray-600 font-bold py-3 px-4 rounded-lg hover:bg-gray-200 transition col-span-1 sm:col-span-2 flex items-center justify-center gap-2">
+                       <i class="fas fa-trash-alt"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT IS UNCHANGED ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const avatar = document.getElementById('avatar');
+            const processBtn = document.getElementById('process-btn');
+            const speakBtn = document.getElementById('speak-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const detectBtn = document.getElementById('detect-btn');
+            const langSelect = document.getElementById('language-select');
+            const statusDiv = document.getElementById('status');
+            const contentDisplay = document.getElementById('content-display');
+            const tabText = document.getElementById('tab-text');
+            const tabPdf = document.getElementById('tab-pdf');
+            const viewText = document.getElementById('view-text');
+            const viewPdf = document.getElementById('view-pdf');
+            const textInput = document.getElementById('text-input');
+            const pdfUpload = document.getElementById('pdf-upload');
+            const pdfFileName = document.getElementById('pdf-file-name');
+
+            // --- State and Config ---
+            let currentMode = 'text';
+            let extractedText = '';
+            let voices = [];
+            // ⚠️ IMPORTANT: Add your Google Cloud API key here for language detection.
+            const apiKey = 'REPLACE_WITH_YOUR_GOOGLE_TRANSLATE_API_KEY';
+
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
+
+            // --- EVENT LISTENERS ---
+            tabText.addEventListener('click', () => switchTab('text'));
+            tabPdf.addEventListener('click', () => switchTab('pdf'));
+            processBtn.addEventListener('click', handleProcess);
+            speakBtn.addEventListener('click', handleSpeak);
+            stopBtn.addEventListener('click', handleStop);
+            clearBtn.addEventListener('click', handleClear);
+            detectBtn.addEventListener('click', detectLanguage);
+            pdfUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                pdfFileName.textContent = file ? file.name : 'No file chosen';
+            });
+
+            // --- FUNCTIONS ---
+            function switchTab(mode) {
+                currentMode = mode;
+                viewText.classList.toggle('hidden', mode !== 'text');
+                viewPdf.classList.toggle('hidden', mode !== 'pdf');
+                tabText.classList.toggle('tab-active', mode === 'text');
+                tabPdf.classList.toggle('tab-active', mode === 'pdf');
+            }
+
+            function handleProcess() {
+                clearOutputs(); // Safely clear only the outputs first
+                if (currentMode === 'text') {
+                    extractedText = textInput.value.trim();
+                    if (!extractedText) return updateStatus('Please enter some text.', true);
+                    finalizeProcessing();
+                } else {
+                    const file = pdfUpload.files[0];
+                    if (!file) return updateStatus('Please select a PDF file.', true);
+                    handlePdfUpload(file);
+                }
+            }
+
+            async function handlePdfUpload(file) {
+                updateStatus('Processing PDF...', false);
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        // FIX: Convert the ArrayBuffer from the file reader into a Uint8Array
+                        const pdfData = new Uint8Array(event.target.result);
+                        const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+                        let fullText = '';
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            fullText += textContent.items.map(item => item.str).join(' ') + '\n';
+                        }
+                        extractedText = fullText.trim();
+                        finalizeProcessing();
+                    } catch (error) {
+                        console.error('Error processing PDF:', error); // Added for better debugging
+                        updateStatus('Failed to process PDF.', true);
+                    }
+                };
+                reader.onerror = () => updateStatus('Failed to read file.', true);
+                reader.readAsArrayBuffer(file);
+            }
+            
+            function finalizeProcessing() {
+                contentDisplay.textContent = extractedText;
+                speakBtn.disabled = false;
+                updateStatus('Content processed successfully!', false);
+            }
+
+            function handleSpeak() {
+                if (!extractedText || !speechSynthesis) return;
+
+                // First, cancel any ongoing or paused speech to ensure a clean start.
+                if (speechSynthesis.speaking || speechSynthesis.paused) {
+                    speechSynthesis.cancel();
+                }
+
+                // A small delay is crucial to work around a browser bug where `speak()`
+                // is ignored if called immediately after `cancel()`.
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(extractedText);
+                    const selectedLang = langSelect.value;
+                    const voice = voices.find(v => v.lang === selectedLang);
+                    
+                    // Setting the voice property is the most reliable way to set the language and accent.
+                    if (voice) {
+                        utterance.voice = voice;
+                    }
+                    // As a fallback, set the lang property.
+                    utterance.lang = selectedLang;
+
+                    utterance.onstart = () => {
+                        avatar.classList.add('avatar-speaking');
+                    };
+
+                    utterance.onend = () => {
+                        avatar.classList.remove('avatar-speaking');
+                    };
+                    
+                    utterance.onerror = (e) => {
+                        console.error("SpeechSynthesis Error:", e);
+                        avatar.classList.remove('avatar-speaking');
+                        updateStatus('Could not play audio for this language.', true);
+                    };
+
+                    speechSynthesis.speak(utterance);
+                }, 100); // 100ms delay.
+            }
+            
+            function handleStop() {
+                if (speechSynthesis.speaking || speechSynthesis.paused) {
+                    speechSynthesis.cancel(); // This will also trigger the onend event for the utterance
+                }
+            }
+            
+            function clearOutputs() {
+                handleStop();
+                extractedText = '';
+                contentDisplay.textContent = 'Your content will appear here...';
+                speakBtn.disabled = true;
+                statusDiv.textContent = '';
+            }
+
+            function handleClear(showMessage = true) {
+                clearOutputs();
+                textInput.value = '';
+                pdfUpload.value = ''; // This resets the file input
+                pdfFileName.textContent = 'No file chosen';
+                if (showMessage) updateStatus('Content cleared.', false);
+            }
+
+            async function detectLanguage() {
+                if (!extractedText) return updateStatus('No content to detect.', true);
+                if (!apiKey || apiKey === 'REPLACE_WITH_YOUR_GOOGLE_TRANSLATE_API_KEY') return updateStatus('API Key for detection is missing.', true);
+                
+                updateStatus('Detecting language...', false);
+                try {
+                    const res = await fetch(`https://translation.googleapis.com/language/translate/v2/detect?key=${apiKey}`, {
+                        method: 'POST',
+                        body: JSON.stringify({ q: extractedText }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!res.ok) throw new Error('API request failed');
+                    const data = await res.json();
+                    const detection = data.data.detections[0][0];
+                    const langName = new Intl.DisplayNames(['en'], { type: 'language' }).of(detection.language);
+                    updateStatus(`Detected: ${langName} (${Math.round(detection.confidence * 100)}% certain)`, false);
+                } catch (error) {
+                    updateStatus('Failed to detect language.', true);
+                }
+            }
+
+            function updateStatus(message, isError) {
+                statusDiv.textContent = message;
+                statusDiv.className = `w-full text-center h-6 ${isError ? 'text-red-500' : 'text-green-600'}`;
+            }
+
+            function loadVoices() {
+                voices = speechSynthesis.getVoices();
+                const uniqueLangs = new Map();
+                voices.forEach(v => { if (!uniqueLangs.has(v.lang)) uniqueLangs.set(v.lang, v.name); });
+                langSelect.innerHTML = '';
+                uniqueLangs.forEach((name, lang) => {
+                    const option = document.createElement('option');
+                    option.value = lang;
+                    const langName = new Intl.DisplayNames(['en'], { type: 'language' }).of(lang.split('-')[0]) || lang;
+                    option.textContent = `${langName} (${name})`;
+                    if(lang.startsWith('en')) option.selected = true;
+                    langSelect.appendChild(option);
+                });
+            }
+
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        });
+    </script>
+</body>
+</html>
+
