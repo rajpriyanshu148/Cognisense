@@ -1,6 +1,6 @@
 # Projects-
 here i post my projects and work which i generally use to contribute to the real world or try to do so 
-# 🚀 Projects by Priyanshu Singh
+# 🚀 Projects by Team 404
 
 Welcome to my repository!  
 This repo contains two of my key hackathon projects developed during **Hackmanthan 2025 at Lovely Professional University (LPU)**.  
