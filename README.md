@@ -1,6 +1,6 @@
-# Projects-
+# Cognisense-
 here i post my projects and work which i generally use to contribute to the real world or try to do so 
-# 🚀 Projects by Team 404
+# 🚀  by Team 404 [Gagandeep Chandrakar, Mayank, Priyanshu Singh(L), Rupesh kumar, Suraj Tiwari]
 
 Welcome to my repository!  
 This repo contains two of my key hackathon projects developed during **Hackmanthan 2025 at Lovely Professional University (LPU)**.  
