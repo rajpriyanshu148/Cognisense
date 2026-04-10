@@ -33,9 +33,9 @@ It’s built to assist **visually impaired users**, educators, and multilingual 
 - Simple and Responsive Interface  
 
 ### 🔗 Live Demo
-👉 [**View Project**](https://rajpriyanshu148.github.io/Projects-/first_translator.html)  
-👉 [**Alternate Version**](https://rajpriyanshu148.github.io/Projects-/second_translator.html)
-
+👉 [**View Project**](https://rajpriyanshu148.github.io/Cognisense/)  
+👉 [**Text to Speach Translater(Cognisense)**](https://rajpriyanshu148.github.io/Cognisense/first_translator.html)
+👉 [**Text to Speach Translater(For Pdf and file sourse)**](https://rajpriyanshu148.github.io/Cognisense/second_translator.html)
 ---
 
 ## 🤖 Project 2: CogniSense – AI Accessibility Tool
